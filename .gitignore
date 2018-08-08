@@ -1,0 +1,14 @@
+*.fosp
+*.fosb
+*.fomapb
+*.exe
+*.dll
+*.zip
+*.7zip
+*.log
+*.dat
+*.bos
+save/
+log/
+cache/
+pack/
