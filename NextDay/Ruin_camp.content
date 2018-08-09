@@ -1,0 +1,10 @@
+#==========================================================
+#ND Ruin camp
+#==========================================================
+
+Name = Ruin_camp							
+LocationPid = 1303							
+Flags = Static Hidden	
+Visible = 50								
+Size = 1 1 									
+Create:Ruin_camp = 19 56	
