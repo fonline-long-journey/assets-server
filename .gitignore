@@ -1,3 +1,6 @@
+FOnlineServer
+*.db
+*.pdb
 *.fosp
 *.fosb
 *.fomapb
