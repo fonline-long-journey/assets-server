@@ -1,0 +1,463 @@
+// Author: heX, cvet
+
+#include "_macros.fos"
+#include "_npc_pids.fos"
+
+import bool AddAttackPlane( Critter& npc, uint priority, Critter& target ) from "npc_planes";
+import bool AddWalkPlane( Critter& npc, uint priority, uint16 hexX, uint16 hexY, uint8 dir, bool run, uint cut ) from "npc_planes";
+import uint EraseAttackPlane( Critter& npc, Critter& target ) from "npc_planes";
+import bool IsKindFriend( Critter& cr, Critter& check ) from "world";
+
+#define DISTANCE_GO_HOME 5
+
+const uint16[] Pids_BestialMobs =
+{
+	NPC_PID_RegularRat,
+	NPC_PID_Mantis,
+	NPC_PID_Ant,
+	NPC_PID_RegularPigRat,
+	NPC_PID_Molerat,
+	NPC_PID_MutatedMolerat,
+	NPC_PID_SmallSilverGecko,
+	NPC_PID_GoldenGecko,
+	NPC_PID_WildDog,
+	NPC_PID_SmallRadscorpion,
+	NPC_PID_LargeRadscorpion,
+	NPC_PID_Brahmin,
+	NPC_PID_Alien,
+	NPC_PID_SmDeathclaw,
+	NPC_PID_Deathclaw,
+	NPC_PID_ToughDeathclaw,
+	NPC_PID_FireGecko,
+	NPC_PID_Centaur,
+	NPC_PID_Floater,
+	NPC_PID_MirelurkWeak
+};
+
+interface Controller
+{
+	bool Attack( Critter& target );
+}
+
+class MobController : Controller
+{
+	MobController( Critter& npc )
+	{
+		@Npc = npc;
+	}
+
+	bool Attack( Critter& target ) override
+	{
+		return AddAttackPlane( Npc, 0, target );
+	}
+	
+	Critter@ Npc;
+}
+
+class GroupController : Controller
+{
+	GroupController( Critter& npc )
+	{
+		ListNpc.resize( 0 );
+		Map@ map = npc.GetMap();
+		if( @map !is null )
+		{
+			Critter@[] critters;
+			int teamId = npc.Stat[ ST_TEAM_ID ];
+			for( uint i = 0, iEnd = map.GetCritters( 0, FIND_LIFE_AND_KO | FIND_ONLY_NPC, critters); i < iEnd; i++ )
+				if( critters[i].Stat[ ST_TEAM_ID ] == teamId )
+					ListNpc.insertLast( critters[i] );
+			TeamId = teamId;
+		}
+	}
+
+	bool Attack( Critter& target ) override
+	{
+		for( uint i = 0, iEnd = ListNpc.length(); i < iEnd; i++ )
+			AddAttackPlane( ListNpc[i], 0, target );
+		return true;
+	}
+	
+	int TeamId;
+	Critter@[] ListNpc;
+}
+
+GroupController@ GetTeamController( Critter& npc )
+{
+	return @GroupController( npc );
+}
+
+MobController@ GetMobController( Critter& npc )
+{
+	return @MobController( npc );
+}
+
+Controller@ GetController( Critter& npc )
+{
+	if( 0 == npc.Stat[ST_TEAM_ID] )
+		return @GetMobController(npc);
+	return @GetTeamController( npc );
+}
+
+void RandomStep( Critter& npc )
+{
+	int rand = Random( 0, 9 );
+    if( rand == 0 || ( npc.Mode[ MODE_NO_HOME ] == 1 && rand < 6 ) ) 
+	{
+		npc.MoveRandom();
+		npc.ModeBase[ MODE_NO_HOME ] = 1;
+	}
+}
+
+bool TryGoHome( Critter& npc )
+{
+    if( npc.IsLife() )
+    {
+        uint   mapId = 0;
+        uint16 homeX = 0;
+        uint16 homeY = 0;
+        uint8  dir = 0;
+        npc.GetHomePos( mapId, homeX, homeY, dir );
+        if( npc.GetMapId() == mapId && GetDistantion( homeX, homeY, npc.HexX, npc.HexY ) > DISTANCE_GO_HOME )
+        {
+            npc.DropPlanes();
+			return AddWalkPlane( npc, 0, homeX, homeY, dir, false, 0 );
+        }
+    }
+	return false;
+}
+
+void MobIdle( Critter& mob )
+{
+	if( mob.IsCanWalk( ) )
+	{
+		RandomStep( mob );
+		if( mob.Mode[ MODE_NO_HOME ] == 1 && TryGoHome( mob ) )
+			mob.ModeBase[ MODE_NO_HOME ] = 0;
+	}
+}
+
+bool MobAttacked( Critter& mob, Critter& attacker )
+{	
+	Controller@ controller = @GetController( mob );
+    return controller.Attack( attacker );
+}
+
+void MobShowCritter( Critter& mob, Critter& critter )
+{
+	if( ( 0 != mob.Stat[ST_TEAM_ID] && mob.Stat[ST_TEAM_ID] == critter.Stat[ST_TEAM_ID] ) || IsKindFriend( mob, critter ) )
+		return;
+
+	Controller@ controller = @GetController( mob );
+    controller.Attack( critter );
+}
+
+void MobHideCritter( Critter& npc, Critter& player )
+{
+
+}
+
+void GM_MobInit( Critter& npc ) // Export
+{
+    npc.SetScript( "_MobInit" );
+}
+
+void GM_MobBossInit( Critter& npc ) // Export
+{
+    npc.SetScript( "_BossMobInit" );
+}
+
+void GM_MobMinionInit( Critter& npc ) // Export
+{
+	npc.PerkBase[ PE_SILENT_RUNNING ] = 1;
+    npc.SetScript( "_MinionMobInit" );
+}
+
+void _MobInit( Critter& npc, bool firstTime )
+{
+	npc.SetEvent( CRITTER_EVENT_IDLE, "MobIdle" );
+	npc.SetEvent( CRITTER_EVENT_ATTACKED,"MobAttacked" );
+	
+	npc.SetEvent(CRITTER_EVENT_SHOW_CRITTER, "MobShowCritter");
+	npc.SetEvent(CRITTER_EVENT_HIDE_CRITTER, "MobHideCritter");
+}
+
+void _HumanoidInit( Critter& npc, bool firstTime )
+{
+	_MobInit( npc, firstTime ); // Копируем базовое поведение
+}
+
+void _BossMobInit(Critter& npc, bool firstTime)
+{
+	_MobInit( npc, firstTime ); // Копируем базовое поведение
+	
+}
+
+void _MinionMobInit(Critter& npc, bool firstTime)
+{
+	_MobInit( npc, firstTime ); // Копируем базовое поведение	
+}
+
+void _MobsMapInit( Map& map, bool firstTime )
+{
+    ActivateMobScript( map );
+}
+
+void ActivateMobScript( Map& map ) // Export
+{
+    Critter@[] critters;
+    for( uint i = 0, j = Pids_BestialMobs.length(); i < j; i++ )
+        map.GetCritters( Pids_BestialMobs[ i ], FIND_ALL | FIND_ONLY_NPC, critters );
+
+    for( uint i = 0, j = critters.length(); i < j; i++ )
+    {
+        if( critters[ i ].GetScriptId() == 0 && ( critters[ i ].Stat[ ST_TEAM_ID ] == 0 || ( critters[ i ].Stat[ ST_TEAM_ID ] >= 24 && critters[ i ].Stat[ ST_TEAM_ID ] <= 33 ) ) )
+            critters[ i ].SetScript( "_MobInit" );
+    }
+}
+
+void _InitSkinningKnife( Item& item, bool firstTime )
+{
+    item.SetEvent( ITEM_EVENT_USE, "e_InitSkinningUse" );
+}
+
+uint16[] DefaultPidsOrder = {   NPC_PID_RegularRat, NPC_PID_Mantis, NPC_PID_Ant, NPC_PID_SporePlant, 
+								NPC_PID_Brahmin, NPC_PID_WildDog, NPC_PID_WildDog /*wolfes*/, 
+								NPC_PID_RegularPigRat, NPC_PID_Molerat, NPC_PID_SmallSilverGecko,
+								NPC_PID_GoldenGecko, NPC_PID_FireGecko, NPC_PID_SmallRadscorpion,
+								NPC_PID_LargeRadscorpion, NPC_PID_SmallRadscorpion /*black scorp*/,
+								NPC_PID_Deathclaw, NPC_PID_MirelurkWeak, NPC_PID_Alien, NPC_PID_Alien /*mother alien*/,
+								NPC_PID_Floater, NPC_PID_Centaur, NPC_PID_BanditMale /*tribal*/, 
+								0 /*not implemented!*/, 0 /*not implemented!*/, NPC_PID_BanditMale /*raider*/
+							};
+
+uint16 NewPidToDefault(uint16 pid)
+{
+	if( pid < 1000 ) return pid; //Функция преобразует лишь новые пиды, не трогая старые.
+	uint16 	start = 1000, 
+			size = 30,
+			resultPidNumber = ( pid - start ) / 30;
+	if( resultPidNumber >= 0 && resultPidNumber < DefaultPidsOrder.length() )
+		//Если в таблице 0 - тогда возвращает тот же пид.
+		return ( DefaultPidsOrder[ resultPidNumber ] == 0 ? pid : DefaultPidsOrder[ resultPidNumber ] ); 
+	else 
+		return pid; //Функция преобразует лишь новые пиды, не трогая старые.
+}
+
+bool e_InitSkinningUse( Item& item, Critter& cr, Critter@ onCritter, Item@ onItem, Scenery@ onScenery )
+{
+	bool skinned = false;
+    if( onCritter.IsDead() && onCritter.IsNpc() )
+    {
+		Item @ darts = onCritter.GetItem(PID_DARTS_LOW, -1 );
+        if( valid(darts) ) 
+		{ 
+			MoveItem( darts, darts.GetCount(), cr ); 
+			cr.Say( SAY_NETMSG, "Вы достали дротики." ); 
+		}
+
+        if( onCritter.Stat[ ST_DESEASE ] != 0 )
+        {
+            cr.Say( SAY_NETMSG, "Уже освежован." );
+            return true;
+        }
+        
+		uint16 npcPid = onCritter.GetProtoId();
+		if( npcPid > 1000 ) npcPid = NewPidToDefault( npcPid );
+		if( npcPid == 10 ) npcPid = NPC_PID_Brahmin; //Дефолтные брамины.		
+		
+        switch( npcPid )
+        {
+			case NPC_PID_RegularRat:
+				_CritAddItem( cr, PID_RAT_MEAT, 1 );
+				if( cr.Perk[ PE_GECKO_SKINNING ] != 0 )
+				{
+					_CritAddItem( cr, PID_MOUSE_SKIN, 1 );
+					cr.Say( SAY_NETMSG, "Вы сдираете шкуру с крысы." );
+				}
+				skinned = true;
+			break;
+			case NPC_PID_Mantis:
+			case NPC_PID_Ant:
+				if( ( cr.Skill[ SK_OUTDOORSMAN ] > 60 ) )
+				{
+					_CritAddItem( cr, PID_MANTIS_SHELL, 1 );
+					skinned = true;
+					cr.Say( SAY_NETMSG, "Вы срываете хитиновый панцирь." );
+				}
+				else cr.Say( SAY_NETMSG, "Не хватает навыков." );
+            break;
+			case NPC_PID_RegularPigRat:
+				_CritAddItem( cr, PID_MEAT, 1 );
+				skinned = true;
+            break;
+			case NPC_PID_Molerat:
+			case NPC_PID_MutatedMolerat:
+				_CritAddItem( cr, PID_MEAT, 1 );
+				_CritAddItem( cr, PID_MOLERAT_STOMATCH, 1 );
+				cr.Say( SAY_NETMSG, "Вы вырезаете желудок кротокрыса." );
+				skinned = true;
+            break;
+			case NPC_PID_SmallSilverGecko:
+				_CritAddItem( cr, PID_GECKO_MEAT, 1 );
+				cr.Say( SAY_NETMSG, "Вы разделываете тушу." );
+				if( cr.Perk[ PE_GECKO_SKINNING ] != 0 )
+				{
+					Log("silver2");
+					_CritAddItem( cr, PID_GECKO_PELT, 1 );
+					cr.Say( SAY_NETMSG, "Вы сдираете шкуру с гекко." );
+				}
+				skinned = true;
+            break;
+			case NPC_PID_GoldenGecko:
+				_CritAddItem( cr, PID_GECKO_MEAT, 1 );
+				cr.Say( SAY_NETMSG, "Вы разделываете тушу." );
+				if( cr.Perk[ PE_GECKO_SKINNING ] != 0 )
+				{
+					_CritAddItem( cr, PID_GOLDEN_GECKO_PELT, 1 );
+					cr.Say( SAY_NETMSG, "Вы сдираете шкуру с гекко." );
+				}
+				skinned = true;
+            break;
+			case NPC_PID_WildDog:
+				_CritAddItem( cr, PID_MEAT, 1 );
+				skinned = true;
+            break;
+			case NPC_PID_SmallRadscorpion:
+				if( ( cr.Skill[ SK_OUTDOORSMAN ] > 60 ) )
+				{
+					_CritAddItem( cr, PID_MANTIS_SHELL, 1 );
+					skinned = true;
+					cr.Say( SAY_NETMSG, "Вы срываете хитиновый панцирь." );
+				}
+				else 
+					cr.Say( SAY_NETMSG, "Не хватает навыков." );
+            break;
+			case NPC_PID_LargeRadscorpion:
+				if( ( cr.Skill[ SK_OUTDOORSMAN ] > 60 ) )
+				{
+					_CritAddItem( cr, PID_MANTIS_SHELL, 1 );
+					skinned = true;
+					_CritAddItem( cr, PID_SCORPION_TAIL, 1 );
+					cr.Say( SAY_NETMSG, "Вы разделываете гигантского скорпиона." );
+				}
+				else 
+					cr.Say( SAY_NETMSG, "Не хватает навыков." );
+            break;
+			case NPC_PID_Brahmin:
+				_CritAddItem( cr, PID_MEAT, 4 );
+				skinned = true;
+            break;
+			case NPC_PID_SporePlant:
+				_CritAddItem( cr, PID_PLANT_SPIKE, 4 );
+				skinned = true;
+            break;
+			case NPC_PID_Alien:
+				_CritAddItem( cr, PID_RAD_MEAT, 2 );
+				skinned = true;
+			case NPC_PID_SmDeathclaw:
+			case NPC_PID_Deathclaw:
+			case NPC_PID_ToughDeathclaw:
+				_CritAddItem( cr, PID_MEAT, 2 );
+				skinned = true;
+            break;
+			case NPC_PID_FireGecko:
+				_CritAddItem( cr, PID_MEAT, 3 );
+				if( cr.Perk[ PE_GECKO_SKINNING ] != 0 )
+				{
+					_CritAddItem( cr, PID_FIRE_GECKO_PELT, 1 );
+					cr.Say( SAY_NETMSG, "Вы сдираете шкуру с гекко." );
+				}
+				skinned = true;
+            break;
+			case NPC_PID_Centaur:
+				_CritAddItem( cr, PID_RAD_MEAT, 4 );
+				_CritAddItem( cr, PID_MUTATED_GLAND, 1 );
+				cr.Say( SAY_NETMSG, "Вы извлекаете железу твари." );
+				skinned = true;
+            break;
+			case NPC_PID_Floater:
+				_CritAddItem( cr, PID_RAD_MEAT, 1 );
+				_CritAddItem( cr, PID_MUTATED_GLAND, 1 );
+				cr.Say( SAY_NETMSG, "Вы извлекаете железу твари." );
+				skinned = true;
+            break;
+			case NPC_PID_MirelurkWeak:
+				if( ( cr.Skill[ SK_OUTDOORSMAN ] > 100 ) && cr.Perk[ PE_GECKO_SKINNING ] >= 2 )
+				{
+					_CritAddItem( cr, PID_MIRELUK_SHELL, 1 );
+					skinned = true;
+					cr.Say( SAY_NETMSG, "Вы срываете панцирь с мяса болотника." );
+				}
+				else
+					cr.Say( SAY_NETMSG, "Не хватает навыков." );
+			break;
+			case NPC_PID_BanditFemale:		
+			case NPC_PID_RaiderFemale:  
+			case NPC_PID_ToughFemaleThug:
+			/*if( cr.Perk[ PE_CANNIBAL ] != 0 )
+			{
+			_CritAddItem( cr, PID_MEAT, 1 );
+			cr.Say( SAY_NETMSG, "Вы разделываете тело человека" );
+			skinned = true;
+			} */
+			break;
+		
+			case NPC_PID_BanditMale:                           
+			case NPC_PID_MauraderMale:            
+			case NPC_PID_RaiderMale:              
+			case NPC_PID_MaleSlaver:               
+			case NPC_PID_MaleSlaver2:              
+			case NPC_PID_ToughMaleThug:                     
+			case NPC_PID_MaleTrapper:                                                                                     
+			/*if( cr.Perk[ PE_CANNIBAL ] != 0 )
+			{
+			_CritAddItem( cr, PID_MEAT, 2 );
+			cr.Say( SAY_NETMSG, "Вы разделываете тело человека" );
+			skinned = true;
+			} */
+			break;
+			
+			case NPC_PID_GreenGhoul:               
+			case NPC_PID_WhiteGhoul:
+			/*if( cr.Perk[ PE_CANNIBAL ] != 0 )
+			{
+			_CritAddItem( cr, PID_RAD_MEAT, 2 );
+			cr.Say( SAY_NETMSG, "Вы разделываете тело гуля" );
+			skinned = true;
+			} */
+			break;
+		
+			case NPC_PID_Supermutant: 
+				/* if( cr.Perk[ PE_CANNIBAL ] != 0 )
+				{
+					_CritAddItem( cr, PID_MEAT, 4 );
+					cr.Say( SAY_NETMSG, "Вы разделываете тело супермутанта" );
+					skinned = true;
+				} */
+			break;
+		}
+	}
+	else if( onCritter.IsDead() && !onCritter.IsNpc() )
+	{
+		if( onCritter.Stat[ ST_DESEASE ] != 0 )
+		{
+			cr.Say( SAY_NETMSG, "Уже освежован." );
+			return true;
+		}
+		/* Log("cannibal_player");
+		if(cr.Perk[ PE_CANNIBAL ] != 0)
+		{
+			onCritter.ToLife();
+			onCritter.ToDead( ANIM2_DEAD_BLOODY_SINGLE, cr );
+			 _CritAddItem( cr, PID_MEAT, 4);
+			 cr.Say( SAY_NETMSG, "Вы разделываете тело человека" );
+			 skinned = true;
+		}	 */
+	}
+	if( skinned )
+	{
+		onCritter.StatBase[ ST_DESEASE ] = 1;
+	}
+    return true;
+}

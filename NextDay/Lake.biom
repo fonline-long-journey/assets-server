@@ -1,0 +1,15 @@
+Maps:EW = 900-903
+Maps:SN = 905-907
+Maps:EN = 910-914
+Maps:ES = 915-919
+Maps:SW = 920-922
+Maps:WN = 925-929
+Maps:ESN = 930-932
+Maps:EWN = 935-937
+Maps:ESW = 940-942
+Maps:SWN = 945-947
+Symbol:Parse = L
+Symbol:Client = W
+Symbol:Color = 15 252 240 180
+Speed = 0.0f
+Flags = Orientation

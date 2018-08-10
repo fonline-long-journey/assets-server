@@ -1,0 +1,258 @@
+#==========================================================
+#ND Big lake
+#==========================================================
+
+Name = Big_lake_coast_es1					#Имя части контента
+LocationPid = 1200							#Пид локации части контента
+Flags = Static					#Опции видимости локации. Варинты: Static Encounter Ignored Hidden SpawnItems		
+Visible = 50								#Видимость локации на глобале
+Size = 1 1 									#Задает размер локации на глобальной карте для осей "х" и "у" размер прирастает влево и вниз
+Create:Big_lake_coast_es1 = 27 45			#Создает экземпляр этой локации с внутренним именем в позиции "х" и "у"
+#Symbol:Client = T							#Символ на клетке глобала
+#Symbol:Color =	60 249 0 1					#Цвет символа на глобале rgba
+#Cell:Color =								#Цвет клетки на глобале rgba
+#GlobalData = 								#Это для скриптов только. Для прав мэра, списка администрации и подобного.
+
+new Big_lake_coast_ws1
+LocationPid = 1201
+Flags = Static
+								
+Visible = 50								
+Size = 1 1 									
+Create:Big_lake_coast_ws1 = 28 45
+
+new Big_lake_coast_es2
+LocationPid = 1202
+Flags = Static
+								
+Visible = 50								
+Size = 1 1 									
+Create:Big_lake_coast_es2 = 26 46
+
+new Big_lake_coast_se1
+LocationPid = 1203
+Flags = Static							
+Visible = 50								
+Size = 1 1 									
+Create:Big_lake_coast_se1 = 27 46
+
+new Big_lake_coast_sw1
+LocationPid = 1204
+Flags = Static
+							
+Visible = 50								
+Size = 1 1 									
+Create:Big_lake_coast_sw1 = 28 46
+
+new Big_lake_coast_s1
+LocationPid = 1205
+Flags = Static
+								
+Visible = 50								
+Size = 1 1 									
+Create:Big_lake_coast_s1 = 29 46
+
+new Big_lake_coast_ws2
+LocationPid = 1206
+Flags = Static
+								
+Visible = 50								
+Size = 1 1 									
+Create:Big_lake_coast_ws2 = 30 46
+
+new Big_lake_coast_e1
+LocationPid = 1207
+Flags = Static
+								
+Visible = 50								
+Size = 1 1 									
+Create:Big_lake_coast_e1 = 26 47
+
+new Big_lake_middle_1
+LocationPid = 1208
+Flags = Static
+								
+Visible = 50								
+Size = 1 1 									
+Create:Big_lake_middle_1 = 27 47
+
+new Big_lake_middle_2
+LocationPid = 1209
+Flags = Static
+								
+Visible = 50								
+Size = 1 1 									
+Create:Big_lake_middle_2 = 28 47
+
+new Big_lake_middle_3
+LocationPid = 1210
+Flags = Static
+						
+Visible = 50								
+Size = 1 1 									
+Create:Big_lake_middle_3 = 29 47
+
+new Big_lake_coast_w1
+LocationPid = 1211
+Flags = Static
+				
+Visible = 50								
+Size = 1 1 									
+Create:Big_lake_coast_w1 = 30 47
+
+new Big_lake_coast_e2
+LocationPid = 1212
+Flags = Static
+Visible = 50
+Size = 1 1
+Create:Big_lake_coast_e2 = 26 48
+
+new Big_lake_middle_4
+LocationPid = 1213
+Flags = Static
+Visible = 50
+Size = 1 1
+Create:Big_lake_middle_4 = 27 48
+
+new Big_lake_middle_5
+LocationPid = 1214
+Flags = Static
+Visible = 50
+Size = 1 1
+Create:Big_lake_middle_5 = 28 48
+
+new Big_lake_middle_6
+LocationPid = 1215
+Flags = Static 
+Visible = 50
+Size = 1 1
+Create:Big_lake_middle_6 = 29 48
+
+new Big_lake_town
+LocationPid = 1216
+Flags = Static 
+Visible = 50
+Size = 1 1
+Create:Big_lake_town = 30 48
+
+new Big_lake_coast_en1
+LocationPid = 1217
+Flags = Static 
+Visible = 50
+Size = 1 1
+Create:Big_lake_coast_en1 = 26 49
+
+new Big_lake_coast_ne1
+LocationPid = 1218
+Flags = Static 
+Visible = 50
+Size = 1 1
+Create:Big_lake_coast_ne1 = 27 49
+
+new Big_lake_middle_7
+LocationPid = 1219
+Flags = Static 
+Visible = 50
+Size = 1 1
+Create:Big_lake_middle_7 = 28 49
+
+new Big_lake_coast_nw1
+LocationPid = 1220
+Flags = Static 
+Visible = 50
+Size = 1 1
+Create:Big_lake_coast_nw1 = 29 49
+
+new Big_lake_coast_wn1
+LocationPid = 1221
+Flags = Static 
+Visible = 50
+Size = 1 1
+Create:Big_lake_coast_wn1 = 30 49
+
+new Big_lake_coast_e3
+LocationPid = 1222
+Flags = Static 
+Visible = 50
+Size = 1 1
+Create:Big_lake_coast_e3 = 27 50
+
+new Big_lake_middle_8
+LocationPid = 1223
+Flags = Static 
+Visible = 50
+Size = 1 1
+Create:Big_lake_middle_8 = 28 50
+
+new Big_lake_coast_sw2
+LocationPid = 1224
+Flags = Static 
+Visible = 50
+Size = 1 1
+Create:Big_lake_coast_sw2 = 29 50
+
+new Big_lake_coast_ws3
+LocationPid = 1225
+Flags = Static 
+Visible = 50
+Size = 1 1
+Create:Big_lake_coast_ws3 = 30 50
+
+new Big_lake_coast_en2
+LocationPid = 1226
+Flags = Static 
+								
+Visible = 50								
+Size = 1 1 									
+Create:Big_lake_coast_en2 = 27 51
+
+new Big_lake_coast_ne2
+LocationPid = 1227
+Flags = Static 
+Visible = 50
+Size = 1 1
+Create:Big_lake_coast_ne2 = 28 51
+
+new Big_lake_coast_nw2
+LocationPid = 1228
+Flags = Static 
+Visible = 50
+Size = 1 1
+Create:Big_lake_coast_nw2 = 29 51
+
+new Big_lake_coast_wn2
+LocationPid = 1229
+Flags = Static 
+Visible = 50
+Size = 1 1
+Create:Big_lake_coast_wn2 = 30 51
+
+new Big_lake_coast_en3
+LocationPid = 1230
+Flags = Static 
+								
+Visible = 50								
+Size = 1 1 									
+Create:Big_lake_coast_en3 = 28 52
+
+new Big_lake_coast_wn3
+LocationPid = 1231
+Flags = Static 
+Visible = 50
+Size = 1 1
+Create:Big_lake_coast_wn3 = 29 52
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

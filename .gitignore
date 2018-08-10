@@ -1,9 +1,14 @@
+FOnlineServer
+FOnlineServer.cfg
+*.db
+*.pdb
 *.fosp
 *.fosb
 *.fomapb
 *.exe
 *.dll
 *.zip
+*.rar
 *.7zip
 *.log
 *.dat
